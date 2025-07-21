@@ -1,6 +1,6 @@
 # Sample CRM
 
-This is the repository for a sample CRM.
+This is the repository for a sample CRM. Please find the demo video [here, in this url](https://drive.google.com/file/d/1wfpcUWSoIljWlQXllhZxhxx3org8YCtp/view?usp=sharing).
 
 ## Data Model
 
