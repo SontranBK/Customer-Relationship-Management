@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # DynamoDB Local Service
+  dynamodb-local:
+    image: amazon/dynamodb-local
+    container_name: dynamodb-local
+    ports:
+      - "8000:8000" # Map DynamoDB's default port 8000
+    volumes:
+      - ./dynamodb_data:/home/dynamodblocal/data # Persist data to a local 
+    environment:
+      # Pass dummy credentials to the container
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} # Pass from .env
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} # Pass from .env
+      # Ensure AWS_REGION is also passed, although it should be picked from .env
+      - AWS_REGION=${AWS_REGION}
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb"]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+  # FastAPI Application Service (remains unchanged)
+  api:
+    build: .
+    container_name: service_api
+    ports:
+      - "8001:8000" # Map host port 8001 to container port 8000 (FastAPI default)
+    depends_on:
+      - dynamodb-local
+    env_file:
+      - .env
+    environment:
+      - DYNAMODB_ENDPOINT_URL=http://dynamodb-local:8000
+      # Pass dummy credentials to the container
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} # Pass from .env
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} # Pass from .env
+      # Ensure AWS_REGION is also passed, although it should be picked from .env
+      - AWS_REGION=${AWS_REGION}
+    command: /bin/sh -c "python db_setup.py && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
